@@ -1,0 +1,50 @@
+{% extends 'auth_base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Register{% endblock %}
+
+{% block form_content %}
+<h1>Donor card</h1>
+<p class="lede">Two minutes now saves someone a search later. You can update these details from your board.</p>
+
+<form method="post" action="{{ url_for('register') }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field">
+    <label for="name">Full name</label>
+    <input id="name" name="name" type="text" autocomplete="name" required placeholder="e.g. Priya Singh">
+  </div>
+  <div class="form-grid">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="phone">Phone</label>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="99999 00000">
+    </div>
+    <div class="field">
+      <label for="city">City</label>
+      <input id="city" name="city" type="text" autocomplete="address-level2" placeholder="e.g. Pune">
+    </div>
+    <div class="field">
+      <label for="blood_group">Blood group</label>
+      <select id="blood_group" name="blood_group" required>
+        <option value="" selected disabled>Choose</option>
+        {% for g in blood_groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required placeholder="8+ characters">
+    </div>
+    <div class="field">
+      <label for="confirm">Confirm password</label>
+      <input id="confirm" name="confirm" type="password" autocomplete="new-password" required placeholder="Repeat password">
+    </div>
+  </div>
+  <button class="btn btn-primary mt-2" type="submit">Create donor card {{ icon('arrow') }}</button>
+</form>
+
+<div class="auth-alt">
+  Already registered? <a href="{{ url_for('login') }}">Sign in</a>.
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Find blood{% endblock %}
+{% block page_title %}Find blood{% endblock %}
+{% block page_sub %}Availability across every hospital on the board{% endblock %}
+{% block topbar_actions %}
+<a class="btn btn-sm" href="{{ url_for('donor_dashboard') }}">My board</a>
+{% endblock %}
+
+{% block content %}
+{% include '_search_body.html' %}
+{% endblock %}

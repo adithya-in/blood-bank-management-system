@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+instance/
+.DS_Store
+*.log
+.impeccable/
+.surface-brief.md
+PRODUCT.md

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Inventory{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_sub %}Set units per hospital and blood group{% endblock %}
+
+{% block content %}
+<div class="board-cols">
+  <section class="reveal" style="--i:0" aria-labelledby="stock-sheet">
+    <div class="section-head">
+      <h2 id="stock-sheet">Stock sheet</h2>
+      <span class="meta">Critical at {{ critical_units }} units or fewer</span>
+    </div>
+    <div class="panel">
+      <div class="panel-body flush table-wrap">
+        <table class="data">
+          <thead><tr><th>Hospital</th><th>City</th><th>Group</th><th>Units</th><th>State</th><th>Updated</th></tr></thead>
+          <tbody>
+            {% for r in rows %}
+            <tr>
+              <td class="strong">{{ r['hospital'] }}</td>
+              <td class="muted">{{ r['city'] }}</td>
+              <td><span class="chip">{{ r['blood_group'] }}</span></td>
+              <td class="num" style="font-size:16px">{{ r['units'] }}</td>
+              <td>
+                {% if r['units'] == 0 %}<span class="status status-Cancelled">Empty</span>
+                {% elif r['units'] <= critical_units %}<span class="status status-Pending">Low</span>
+                {% else %}<span class="status status-Approved">Healthy</span>{% endif %}
+              </td>
+              <td class="num muted" style="font-size:12px">{{ r['updated_at'][:16] }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="muted">No stock lines yet. Add a hospital first.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal" style="--i:1" aria-labelledby="set-stock">
+    <div class="section-head"><h2 id="set-stock">Set stock</h2></div>
+    <div class="panel">
+      <div class="panel-body">
+        <form method="post" action="{{ url_for('admin_inventory') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field mb-2">
+            <label for="hospital_id">Hospital</label>
+            <select id="hospital_id" name="hospital_id" required>
+              {% for h in hospitals %}
+              <option value="{{ h['hospital_id'] }}" {% if request.args.get('hospital')|int == h['hospital_id'] %}selected{% endif %}>{{ h['name'] }} — {{ h['city'] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="blood_group">Blood group</label>
+              <select id="blood_group" name="blood_group" required>
+                {% for g in blood_groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field">
+              <label for="units">Units</label>
+              <input id="units" name="units" type="number" min="0" max="999" required placeholder="0">
+            </div>
+          </div>
+          <button class="btn btn-primary mt-2" type="submit">{{ icon('check') }} Save stock line</button>
+          <p class="form-note mt-1">Saving an existing group replaces its count. Use donations to add units with a record.</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-head"><h3>Group totals</h3><span class="meta">All sites</span></div>
+      <div class="panel-body">
+        {% set totals = {} %}
+        {% for g in blood_groups %}
+          {% set ns = namespace(u=0) %}
+          {% for r in rows if r['blood_group'] == g %}{% set ns.u = ns.u + r['units'] %}{% endfor %}
+          <div class="between" style="padding:7px 0;border-bottom:1px solid var(--line)">
+            <span class="mono" style="font-weight:600">{{ g }}</span>
+            <span class="mono">{{ ns.u }} units</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

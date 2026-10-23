@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Bank — Donor & Stock Board</title>
+<meta name="description" content="Check blood availability by group and city, register as a donor, and manage hospital stock.">
+<link rel="preload" href="{{ url_for('static', filename='fonts/archivo-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ url_for('static', filename='fonts/jetbrains-mono-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
+</head>
+<body>
+{% include '_icons.html' %}
+{% from '_macros.html' import icon %}
+
+<div class="landing">
+  <header class="landing-nav">
+    <a class="brand" href="{{ url_for('index') }}" style="color:var(--ink)">
+      <span class="brand-mark" style="background:var(--red);color:var(--paper-raised)">{{ icon('drop') }}</span>
+      <span>
+        <span class="brand-name" style="color:var(--ink)">Blood Bank</span>
+        <span class="brand-sub" style="color:var(--ink-faint)">Donor &amp; Stock Board</span>
+      </span>
+    </a>
+    <div class="actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('search') }}">Availability</a>
+      <a class="btn btn-sm" href="{{ url_for('register') }}">Donor card</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('login') }}">Sign in {{ icon('arrow') }}</a>
+    </div>
+  </header>
+
+  <main class="landing-hero">
+    <span class="eyebrow" style="display:block;margin-bottom:18px;">Pune · Mumbai · Nashik · Demo data</span>
+    <h1>Know what is<br>on the shelf <span class="accent">before</span><br>someone needs it.</h1>
+    <p class="lede">One board for donors, hospital stock and requests. Search a blood group, see the nearest hospital with units, then sign in to book a donation or raise a request.</p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('search') }}">Search availability {{ icon('arrow') }}</a>
+      <a class="btn" href="{{ url_for('register') }}">Register as a donor</a>
+    </div>
+
+    <form class="hero-search" method="get" action="{{ url_for('search') }}">
+      <div class="field">
+        <label for="hero-blood">Blood group</label>
+        <select id="hero-blood" name="blood_group">
+          <option value="">Any group</option>
+          {% for g in blood_groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="hero-city">City</label>
+        <input id="hero-city" name="city" type="text" placeholder="e.g. Pune">
+      </div>
+      <button class="btn btn-primary" type="submit">{{ icon('search') }} Find</button>
+    </form>
+
+    <div class="hero-stats" aria-label="Board totals">
+      <div class="stat"><span class="k">Units on shelves</span><span class="v num" data-count="{{ total_units }}">{{ total_units }}</span></div>
+      <div class="stat"><span class="k">Hospitals</span><span class="v num" data-count="{{ hospitals }}">{{ hospitals }}</span></div>
+      <div class="stat"><span class="k">Registered donors</span><span class="v num" data-count="{{ donors }}">{{ donors }}</span></div>
+    </div>
+  </main>
+
+  <footer class="landing-strip">
+    <span style="color:var(--ink-soft)">Group stock:</span>
+    {% for t in totals %}
+    <span class="blood-swatch {% if t['units'] <= critical_units %}is-low{% endif %}">
+      <i></i>{{ t['blood_group'] }} <span class="num">{{ t['units'] }}</span>
+    </span>
+    {% endfor %}
+    <span style="margin-left:auto">Synthetic demo data · Academic prototype</span>
+  </footer>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

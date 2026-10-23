@@ -1,0 +1,75 @@
+{% from '_macros.html' import icon %}
+<section class="reveal" style="--i:0">
+  <div class="section-head">
+    <h2>Find blood</h2>
+    <span class="meta">Search stock by group and city</span>
+  </div>
+  <form class="search-bar" method="get" action="{{ url_for('search') }}">
+    <div class="field">
+      <label for="blood_group">Blood group</label>
+      <select id="blood_group" name="blood_group">
+        <option value="">Any group</option>
+        {% for g in blood_groups %}<option value="{{ g }}" {% if blood == g %}selected{% endif %}>{{ g }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="city">City</label>
+      <input id="city" name="city" type="text" value="{{ city }}" placeholder="e.g. Pune">
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('search') }} Search</button>
+  </form>
+</section>
+
+{% if blood or city %}
+<section class="panel reveal" style="--i:1" aria-labelledby="results-head">
+  <div class="panel-head">
+    <h2 id="results-head">Results</h2>
+    <span class="meta">{{ rows|length }} site{{ '' if rows|length == 1 else 's' }} with stock</span>
+  </div>
+  <div class="panel-body">
+    {% for r in rows %}
+    <div class="result-row">
+      <div class="result-icon">{{ r['blood_group'] }}</div>
+      <div>
+        <div class="result-name">{{ r['name'] }}</div>
+        <div class="result-meta">{{ r['city'] }}{% if r['phone'] %} · {{ r['phone'] }}{% endif %}</div>
+      </div>
+      <div class="result-units {% if r['units'] <= critical_units %}faint{% endif %}">{{ r['units'] }} <small>units</small></div>
+      {% if r['units'] <= critical_units %}<span class="chip chip-amber">Low</span>{% else %}<span class="chip chip-ok">Available</span>{% endif %}
+    </div>
+    {% else %}
+    <div class="empty-strip">No units match that search. Try a nearby city or another group.</div>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<section class="reveal" style="--i:1" aria-labelledby="summary-head">
+  <div class="section-head">
+    <h2 id="summary-head">Stock by group</h2>
+    <span class="meta">All hospitals</span>
+  </div>
+  <div class="stock-grid">
+    {% for t in totals %}
+    <div class="stock {% if t['units'] <= critical_units %}is-critical{% endif %}">
+      <div class="stock-top">
+        <div>
+          <div class="stock-group">{{ t['blood_group'] }}</div>
+          <div class="stock-unit-label">Units available</div>
+        </div>
+        {% if t['units'] <= critical_units %}<span class="critical-stamp">Low</span>{% endif %}
+      </div>
+      <div class="counter" data-value="{{ t['units'] }}">{{ t['units'] }}</div>
+      <div class="stock-bar" aria-hidden="true"><i data-bar style="--w:{{ (t['units'] / (totals|map(attribute='units')|max or 1) * 100)|round(0) }}%"></i></div>
+      <div class="stock-foot"><span>{{ 'Critical' if t['units'] <= critical_units else 'Healthy' }}</span><span>All sites</span></div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="form-note">Choose a group and city above for site-level counts and phone numbers.</p>
+</section>
+{% endif %}
+
+{% if current_user and current_user['role'] == 'donor' %}
+<div class="reveal mt-3" style="--i:2">
+  <a class="btn" href="{{ url_for('donor_dashboard') }}">Book a donation {{ icon('arrow') }}</a>
+</div>
+{% endif %}

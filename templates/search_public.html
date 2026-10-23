@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find blood — Blood Bank</title>
+<meta name="description" content="Search blood availability by group and city.">
+<link rel="preload" href="{{ url_for('static', filename='fonts/archivo-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ url_for('static', filename='fonts/jetbrains-mono-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script>document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');</script>
+</head>
+<body>
+{% include '_icons.html' %}
+{% from '_macros.html' import icon %}
+<div class="landing">
+  <header class="landing-nav">
+    <a class="brand" href="{{ url_for('index') }}" style="color:var(--ink)">
+      <span class="brand-mark" style="background:var(--red);color:var(--paper-raised)">{{ icon('drop') }}</span>
+      <span>
+        <span class="brand-name" style="color:var(--ink)">Blood Bank</span>
+        <span class="brand-sub" style="color:var(--ink-faint)">Donor &amp; Stock Board</span>
+      </span>
+    </a>
+    <div class="actions">
+      <a class="btn btn-sm" href="{{ url_for('register') }}">Donor card</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('login') }}">Sign in {{ icon('arrow') }}</a>
+    </div>
+  </header>
+
+  <main style="padding: clamp(26px,4vw,48px) var(--pad) 60px; max-width: 1000px;">
+    <h1 style="font-size:clamp(30px,4vw,46px);letter-spacing:-0.035em;margin-bottom:10px;">Is it on the shelf?</h1>
+    <p class="lede" style="margin-bottom:28px;">Search a group and city. Counts are refreshed by the hospital desk; call ahead before travelling.</p>
+    {% include '_search_body.html' %}
+  </main>
+
+  <footer class="landing-strip">
+    <span>Synthetic demo data · Academic prototype</span>
+    <span style="margin-left:auto">Donate blood, save lives.</span>
+  </footer>
+</div>
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="toast toast-{{ category }}" role="status">
+      {{ icon('check' if category == 'success' else 'alert') }}
+      <span>{{ message }}</span>
+      <button type="button" aria-label="Dismiss">×</button>
+    </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

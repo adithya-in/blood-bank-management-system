@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Board{% endblock %}
+{% block page_title %}Dispatch board{% endblock %}
+{% block page_sub %}Live stock · {{ stats.pending }} request{{ '' if stats.pending == 1 else 's' }} waiting{% endblock %}
+{% block topbar_actions %}
+<a class="btn btn-primary btn-sm" href="{{ url_for('admin_requests') }}#new-request">{{ icon('plus') }} New request</a>
+{% endblock %}
+
+{% block content %}
+<section class="stat-row reveal" style="--i:0" aria-label="Board totals">
+  <div class="stat">
+    <span class="k">Units on shelves</span>
+    <span class="v"><span data-count="{{ stats.units }}">{{ stats.units }}</span></span>
+  </div>
+  <div class="stat {% if stats.critical_groups %}is-alert{% endif %}">
+    <span class="k">Groups at or below {{ critical_units }}</span>
+    <span class="v"><span data-count="{{ stats.critical_groups }}">{{ stats.critical_groups }}</span><small>/ 8</small></span>
+  </div>
+  <div class="stat {% if stats.pending %}is-alert{% endif %}">
+    <span class="k">Pending requests</span>
+    <span class="v"><span data-count="{{ stats.pending }}">{{ stats.pending }}</span></span>
+  </div>
+  <div class="stat">
+    <span class="k">Registered donors</span>
+    <span class="v"><span data-count="{{ stats.donors }}">{{ stats.donors }}</span></span>
+  </div>
+</section>
+
+<div class="between mb-2 reveal" style="--i:1">
+  <div class="section-head" style="margin:0">
+    <h2>Stock by group</h2>
+    <span class="meta">Across {{ hospitals|length }} hospitals</span>
+  </div>
+  <a class="btn btn-sm" href="{{ url_for('admin_inventory') }}">Adjust stock {{ icon('arrow') }}</a>
+</div>
+
+<section class="stock-grid" aria-label="Stock by blood group">
+  {% set max_units = stock|map(attribute='units')|max %}
+  {% for s in stock %}
+  <article class="stock reveal {% if s.critical %}is-critical{% endif %}" style="--i:{{ loop.index0 + 2 }}">
+    <div class="stock-top">
+      <div>
+        <div class="stock-group">{{ s.group }}</div>
+        <div class="stock-unit-label">Units available</div>
+      </div>
+      {% if s.critical %}<span class="critical-stamp">Low</span>{% endif %}
+    </div>
+    <div class="counter" data-value="{{ s.units }}" data-group="{{ s.group }}">{{ s.units }}</div>
+    <div class="stock-bar" aria-hidden="true">
+      <i data-bar style="--w:{{ (s.units / (max_units or 1) * 100)|round(0) }}%"></i>
+    </div>
+    <div class="stock-foot">
+      <span>{{ 'Critical' if s.critical else 'Healthy' }}</span>
+      <span>{{ hospitals|length }} sites</span>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<div class="board-cols">
+  <section class="reveal" style="--i:4" aria-labelledby="recent-head">
+    <div class="section-head">
+      <h2 id="recent-head">Recent donations</h2>
+      <a class="meta" href="{{ url_for('admin_donations') }}" style="text-decoration:none">Log a donation →</a>
+    </div>
+    <div class="panel">
+      <div class="panel-body flush table-wrap">
+        <table class="data">
+          <thead>
+            <tr><th>Donor</th><th>Group</th><th>Hospital</th><th>Date</th><th>Units</th></tr>
+          </thead>
+          <tbody>
+            {% for d in recent %}
+            <tr>
+              <td class="strong">{{ d['donor'] }}</td>
+              <td><span class="chip">{{ d['blood_group'] }}</span></td>
+              <td class="muted">{{ d['hospital'] }}</td>
+              <td class="num muted">{{ d['donation_date'] }}</td>
+              <td class="num">{{ d['units'] }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="muted">No donations logged yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-head">
+        <h3>Hospital shelves</h3>
+        <span class="meta">Units by site</span>
+      </div>
+      <div class="panel-body flush table-wrap">
+        <table class="data">
+          <thead><tr><th>Hospital</th><th>City</th><th>Stock lines</th><th>Units</th><th></th></tr></thead>
+          <tbody>
+            {% for h in hospitals %}
+            <tr>
+              <td class="strong">{{ h['name'] }}</td>
+              <td class="muted">{{ h['city'] }}</td>
+              <td class="num muted">{{ h['lines'] if h['lines'] is defined else '—' }}</td>
+              <td class="num">{{ h['units'] }}</td>
+              <td><a class="btn btn-sm btn-ghost" href="{{ url_for('admin_inventory') }}?hospital={{ h['hospital_id'] }}">Open</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal" style="--i:5" aria-labelledby="slips-head">
+    <div class="section-head">
+      <h2 id="slips-head">Waiting in the rail</h2>
+      <a class="meta" href="{{ url_for('admin_requests') }}" style="text-decoration:none">All requests →</a>
+    </div>
+    <div class="slip-rail">
+      {% for r in slips %}
+      <article class="slip urgency-{{ r['urgency'] }}" data-request="{{ r['request_id'] }}" data-group="{{ r['blood_group'] }}">
+        <div class="slip-top">
+          <div>
+            <span class="slip-id">REQ-{{ '%04d'|format(r['request_id']) }}</span>
+            <div class="slip-what"><strong>{{ r['units'] }} units {{ r['blood_group'] }}</strong> for {{ r['hospital'] }}</div>
+          </div>
+          <div class="slip-group">{{ r['blood_group'] }}</div>
+        </div>
+        <div class="slip-meta">
+          <span>{{ r['urgency'] }}</span>
+          <span>{{ r['requester'] }}</span>
+          <span>{{ r['city'] }}</span>
+        </div>
+        <div class="slip-actions">
+          <button class="btn btn-stamp" type="button" data-status="Approved">Approve</button>
+          <button class="btn btn-stamp btn-danger-stamp" type="button" data-status="Cancelled">Decline</button>
+        </div>
+        <span class="slip-stamp" aria-hidden="true">Approved</span>
+      </article>
+      {% else %}
+      <div class="empty-strip">Rail is clear — no pending requests</div>
+      {% endfor %}
+    </div>
+
+    <div class="panel mt-3">
+      <div class="panel-head">
+        <h3>Last 30 days</h3>
+        <span class="meta">Donations</span>
+      </div>
+      <div class="panel-body">
+        <div class="row" style="gap:26px;align-items:flex-end">
+          <div>
+            <span class="eyebrow">Donations</span>
+            <div class="num" style="font-size:30px;font-weight:600;letter-spacing:-0.04em">{{ donations_30['c'] }}</div>
+          </div>
+          <div>
+            <span class="eyebrow">Units collected</span>
+            <div class="num" style="font-size:30px;font-weight:600;letter-spacing:-0.04em">{{ donations_30['u'] }}</div>
+          </div>
+        </div>
+        <p class="form-note mt-2" style="margin-bottom:0">Stock updates when a donation is logged or a request is completed.</p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

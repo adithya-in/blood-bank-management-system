@@ -1,0 +1,16 @@
+{% extends 'auth_base.html' %}
+{% block title %}{{ code }}{% endblock %}
+
+{% block form_content %}
+<div class="demo-stamp" style="transform:none;display:inline-block;margin-bottom:18px;">Error {{ code }}</div>
+<h1>{{ title }}</h1>
+<p class="lede">{{ message }}</p>
+<div class="row mt-3">
+  {% if current_user %}
+  <a class="btn btn-primary" href="{{ url_for('index') }}">Back to the board</a>
+  {% else %}
+  <a class="btn btn-primary" href="{{ url_for('login') }}">Sign in</a>
+  <a class="btn" href="{{ url_for('search') }}">Search availability</a>
+  {% endif %}
+</div>
+{% endblock %}

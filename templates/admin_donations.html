@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Donations{% endblock %}
+{% block page_title %}Donations{% endblock %}
+{% block page_sub %}Every logged donation adds units to the shelf{% endblock %}
+
+{% block content %}
+<div class="board-cols">
+  <section class="reveal" style="--i:0" aria-labelledby="donation-log">
+    <div class="section-head">
+      <h2 id="donation-log">Donation log</h2>
+      <span class="meta">{{ rows|length }} entries</span>
+    </div>
+    <div class="panel">
+      <div class="panel-body flush table-wrap">
+        <table class="data">
+          <thead><tr><th>Date</th><th>Donor</th><th>Group</th><th>Hospital</th><th>Units</th><th>Note</th></tr></thead>
+          <tbody>
+            {% for r in rows %}
+            <tr>
+              <td class="num muted">{{ r['donation_date'] }}</td>
+              <td class="strong">{{ r['donor'] }}</td>
+              <td><span class="chip">{{ r['blood_group'] }}</span></td>
+              <td class="muted">{{ r['hospital'] }}</td>
+              <td class="num">{{ r['units'] }}</td>
+              <td class="muted" style="font-size:12px">{{ r['note'] or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="muted">No donations logged yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal" style="--i:1" aria-labelledby="log-donation">
+    <div class="section-head"><h2 id="log-donation">Log a donation</h2></div>
+    <div class="panel">
+      <div class="panel-body">
+        <form method="post" action="{{ url_for('admin_donations') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field mb-2">
+            <label for="donor_id">Donor</label>
+            <select id="donor_id" name="donor_id" required>
+              {% for d in donors %}<option value="{{ d['user_id'] }}">{{ d['name'] }} — {{ d['blood_group'] or '—' }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field mb-2">
+            <label for="hospital_id">Hospital</label>
+            <select id="hospital_id" name="hospital_id" required>
+              {% for h in hospitals %}<option value="{{ h['hospital_id'] }}">{{ h['name'] }} — {{ h['city'] }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="donation_date">Date</label>
+              <input id="donation_date" name="donation_date" type="date" value="{{ today }}" required>
+            </div>
+            <div class="field">
+              <label for="units">Units</label>
+              <input id="units" name="units" type="number" min="1" max="2" value="1" required>
+            </div>
+            <div class="field span-2">
+              <label for="note">Note</label>
+              <input id="note" name="note" type="text" maxlength="200" placeholder="Whole blood, platelets, camp…">
+            </div>
+          </div>
+          <button class="btn btn-primary mt-2" type="submit">{{ icon('check') }} Log donation</button>
+          <p class="form-note mt-1">The donor's blood group is added to that hospital's shelf automatically.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

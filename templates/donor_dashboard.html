@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}My board{% endblock %}
+{% block page_title %}My board{% endblock %}
+{% block page_sub %}Donor record · {{ user['blood_group'] or 'blood group not set' }}{% endblock %}
+{% block topbar_actions %}
+<a class="btn btn-sm" href="{{ url_for('search') }}">{{ icon('search') }} Find blood</a>
+{% endblock %}
+
+{% block content %}
+<section class="record-strip reveal" style="--i:0" aria-label="Donor record">
+  <div class="record-group">{{ user['blood_group'] or '—' }}</div>
+  <div>
+    <div class="record-name">{{ user['name'] }}</div>
+    <div class="record-meta">{{ user['city'] or 'City not set' }} · {{ user['email'] }}</div>
+  </div>
+  <div class="record-elig">
+    {% if stats.eligible %}
+      <span class="k">Eligibility</span>
+      <div class="v" style="color:var(--amber)">Ready to donate</div>
+    {% else %}
+      <span class="k">Next eligible in</span>
+      <div class="v">{{ stats.days_left }} <small>days</small></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="stat-row mt-3 reveal" style="--i:1" aria-label="Donor totals">
+  <div class="stat">
+    <span class="k">Donations</span>
+    <span class="v"><span data-count="{{ stats.count }}">{{ stats.count }}</span></span>
+  </div>
+  <div class="stat">
+    <span class="k">Units given</span>
+    <span class="v"><span data-count="{{ stats.units }}">{{ stats.units }}</span></span>
+  </div>
+  <div class="stat">
+    <span class="k">Last donation</span>
+    <span class="v" style="font-size:18px">{{ stats.last_date or '—' }}</span>
+  </div>
+  <div class="stat {% if not stats.eligible %}is-alert{% endif %}">
+    <span class="k">Next eligible date</span>
+    <span class="v" style="font-size:18px">{{ stats.next_date or 'Now' }}</span>
+  </div>
+</section>
+
+<div class="donor-grid">
+  <div class="stack">
+    <section class="reveal" style="--i:2" aria-labelledby="history-head">
+      <div class="section-head">
+        <h2 id="history-head">Donation history</h2>
+        <span class="meta">90-day cooldown between donations</span>
+      </div>
+      <div class="panel">
+        <div class="panel-body">
+          <ul class="timeline">
+            {% for h in history %}
+            <li>
+              <span class="when">{{ h['donation_date'] }}</span>
+              <span class="what">{{ h['hospital'] }}<small>{{ h['note'] or 'Whole blood donation' }}</small></span>
+              <span class="qty">{{ h['units'] }} unit{{ '' if h['units'] == 1 else 's' }}</span>
+            </li>
+            {% else %}
+            <li><span class="when">—</span><span class="what">No donations yet. Book your first slot.<small>You will see the record here after the hospital logs it.</small></span><span class="qty"></span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal" style="--i:3" aria-labelledby="request-head">
+      <div class="section-head">
+        <h2 id="request-head">My requests</h2>
+        <span class="meta">{{ my_requests|length }} raised</span>
+      </div>
+      <div class="panel">
+        <div class="panel-body flush table-wrap">
+          <table class="data">
+            <thead><tr><th>Ref</th><th>Group</th><th>Units</th><th>Hospital</th><th>Status</th><th>Raised</th></tr></thead>
+            <tbody>
+              {% for r in my_requests %}
+              <tr>
+                <td class="num muted">REQ-{{ '%04d'|format(r['request_id']) }}</td>
+                <td><span class="chip">{{ r['blood_group'] }}</span></td>
+                <td class="num">{{ r['units'] }}</td>
+                <td class="muted">{{ r['hospital'] }}</td>
+                <td><span class="status status-{{ r['status'] }}">{{ r['status'] }}</span></td>
+                <td class="num muted" style="font-size:12px">{{ r['created_at'][:10] }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="muted">No requests raised. Use the form to ask a hospital for blood.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="reveal" style="--i:2" aria-labelledby="book-head">
+      <div class="section-head"><h2 id="book-head">Book a donation</h2></div>
+      <div class="panel">
+        <div class="panel-body">
+          {% if appointments %}
+          <div class="mb-2">
+            {% for a in appointments %}
+            <div class="appointment">
+              <div>
+                <div class="when">{{ a['slot_date'] }} · {{ a['slot_time'] }}</div>
+                <div class="where">{{ a['hospital'] }}, {{ a['city'] }}</div>
+              </div>
+              <form method="post" action="{{ url_for('cancel_appointment', appointment_id=a['appointment_id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-ghost" type="submit">Cancel</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <form method="post" action="{{ url_for('book_appointment') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field mb-2">
+              <label for="hospital_id">Hospital</label>
+              <select id="hospital_id" name="hospital_id" required>
+                {% for h in hospitals %}<option value="{{ h['hospital_id'] }}">{{ h['name'] }} — {{ h['city'] }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="slot_date">Date</label>
+                <input id="slot_date" name="slot_date" type="date" min="{{ today }}" required>
+              </div>
+              <div class="field">
+                <label for="slot_time">Time</label>
+                <select id="slot_time" name="slot_time">
+                  <option>09:00</option><option>10:30</option><option>12:00</option>
+                  <option>14:30</option><option>16:00</option><option>17:30</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary mt-2" type="submit">{{ icon('calendar') }} Book slot</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal" style="--i:3" aria-labelledby="ask-head">
+      <div class="section-head"><h2 id="ask-head">Request blood</h2></div>
+      <div class="panel">
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('create_request') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field mb-2">
+              <label for="req_hospital">Hospital</label>
+              <select id="req_hospital" name="hospital_id" required>
+                {% for h in hospitals %}<option value="{{ h['hospital_id'] }}">{{ h['name'] }} — {{ h['city'] }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="req_group">Group</label>
+                <select id="req_group" name="blood_group" required>
+                  {% for g in blood_groups %}<option value="{{ g }}" {% if g == user['blood_group'] %}selected{% endif %}>{{ g }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="field">
+                <label for="req_units">Units</label>
+                <input id="req_units" name="units" type="number" min="1" max="20" value="1" required>
+              </div>
+              <div class="field span-2">
+                <label for="req_urgency">Urgency</label>
+                <select id="req_urgency" name="urgency"><option>Routine</option><option>Critical</option></select>
+              </div>
+              <div class="field span-2">
+                <label for="req_note">Note</label>
+                <input id="req_note" name="note" type="text" maxlength="200" placeholder="Ward, procedure or contact">
+              </div>
+            </div>
+            <button class="btn mt-2" type="submit">{{ icon('inbox') }} Raise request</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

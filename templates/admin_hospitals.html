@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Hospitals{% endblock %}
+{% block page_title %}Hospitals{% endblock %}
+{% block page_sub %}Sites on the board · {{ hospitals|length }} registered{% endblock %}
+
+{% block content %}
+<div class="board-cols">
+  <section class="reveal" style="--i:0" aria-labelledby="hospital-list">
+    <div class="section-head">
+      <h2 id="hospital-list">Registered sites</h2>
+      <span class="meta">Delete is blocked once requests exist</span>
+    </div>
+    <div class="panel">
+      <div class="panel-body flush table-wrap">
+        <table class="data">
+          <thead><tr><th>Hospital</th><th>City</th><th>Phone</th><th>Stock lines</th><th>Units</th><th></th></tr></thead>
+          <tbody>
+            {% for h in hospitals %}
+            <tr>
+              <td>
+                <div class="strong">{{ h['name'] }}</div>
+                <div class="muted" style="font-size:12px">{{ h['address'] or '—' }}</div>
+              </td>
+              <td class="muted">{{ h['city'] }}</td>
+              <td class="num muted">{{ h['phone'] or '—' }}</td>
+              <td class="num">{{ h['lines'] }}</td>
+              <td class="num">{{ h['units'] }}</td>
+              <td>
+                <form method="post" action="{{ url_for('delete_hospital', hospital_id=h['hospital_id']) }}"
+                      onsubmit="return confirm('Remove {{ h['name'] }} from the board?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-stamp btn-danger-stamp" type="submit">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="muted">No hospitals yet. Add the first site.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal" style="--i:1" aria-labelledby="add-hospital">
+    <div class="section-head"><h2 id="add-hospital">Add a hospital</h2></div>
+    <div class="panel">
+      <div class="panel-body">
+        <form method="post" action="{{ url_for('admin_hospitals') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field mb-2">
+            <label for="name">Hospital name</label>
+            <input id="name" name="name" type="text" required placeholder="e.g. Sunrise Blood Centre">
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="city">City</label>
+              <input id="city" name="city" type="text" required placeholder="e.g. Nashik">
+            </div>
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" placeholder="0253-000-0000">
+            </div>
+            <div class="field span-2">
+              <label for="address">Address</label>
+              <input id="address" name="address" type="text" placeholder="Street and area">
+            </div>
+          </div>
+          <button class="btn btn-primary mt-2" type="submit">{{ icon('plus') }} Add hospital</button>
+          <p class="form-note mt-1">A new site starts with eight empty stock lines.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

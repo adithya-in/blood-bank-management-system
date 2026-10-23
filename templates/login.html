@@ -1,0 +1,32 @@
+{% extends 'auth_base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Sign in{% endblock %}
+
+{% block form_content %}
+<h1>Sign in</h1>
+<p class="lede">Staff and donors use the same board, with different desks.</p>
+
+<form method="post" action="{{ url_for('login') }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="username" required placeholder="you@example.com">
+  </div>
+  <div class="field">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Your password">
+  </div>
+  <button class="btn btn-primary" type="submit">Open the board {{ icon('arrow') }}</button>
+</form>
+
+<div class="demo-card">
+  <strong>DEMO ACCOUNTS</strong><br>
+  Admin — <kbd>admin@bloodbank.test</kbd> / <kbd>Admin@123</kbd><br>
+  Donor — <kbd>donor@bloodbank.test</kbd> / <kbd>Donor@123</kbd>
+</div>
+
+<div class="auth-alt">
+  New donor? <a href="{{ url_for('register') }}">Register a donor card</a>.<br>
+  Just checking stock? <a href="{{ url_for('search') }}">Search availability</a>.
+</div>
+{% endblock %}

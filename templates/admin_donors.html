@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Donors{% endblock %}
+{% block page_title %}Donors{% endblock %}
+{% block page_sub %}{{ donors|length }} donor record{{ '' if donors|length == 1 else 's' }}{% if search %} matching "{{ search }}"{% endif %}{% endblock %}
+
+{% block content %}
+<form class="search-bar reveal" style="--i:0" method="get" action="{{ url_for('admin_donors') }}">
+  <div class="field">
+    <label for="q">Search donors</label>
+    <input id="q" name="q" type="search" value="{{ search }}" placeholder="Name, email, city or blood group">
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <button class="btn" type="submit">{{ icon('search') }} Search</button>
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    {% if search %}<a class="btn btn-ghost" href="{{ url_for('admin_donors') }}">Clear</a>{% endif %}
+  </div>
+</form>
+
+<section class="panel reveal" style="--i:1" aria-labelledby="donor-table">
+  <div class="panel-head">
+    <h2 id="donor-table">Donor register</h2>
+    <span class="meta">Synthetic demo records</span>
+  </div>
+  <div class="panel-body flush table-wrap">
+    <table class="data">
+      <thead><tr><th>Name</th><th>Group</th><th>City</th><th>Phone</th><th>Email</th><th>Last donation</th><th>Donations</th></tr></thead>
+      <tbody>
+        {% for d in donors %}
+        <tr>
+          <td class="strong">{{ d['name'] }}</td>
+          <td><span class="chip">{{ d['blood_group'] or '—' }}</span></td>
+          <td class="muted">{{ d['city'] or '—' }}</td>
+          <td class="num muted">{{ d['phone'] or '—' }}</td>
+          <td class="muted">{{ d['email'] }}</td>
+          <td class="num muted">{{ d['last_donation'] or 'Never' }}</td>
+          <td class="num">{{ d['donations'] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted">No donors match that search.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% block title %}Requests{% endblock %}
+{% block page_title %}Requests{% endblock %}
+{% block page_sub %}{{ rows|length }} record{{ '' if rows|length == 1 else 's' }} · {{ status|lower }} view{% endblock %}
+{% block topbar_actions %}
+<a class="btn btn-sm" href="#new-request">{{ icon('plus') }} New</a>
+{% endblock %}
+
+{% block content %}
+<div class="between mb-2 reveal" style="--i:0">
+  <div class="filters" aria-label="Filter requests">
+    {% for s in ['All','Pending','Approved','Completed','Cancelled'] %}
+    <a class="filter-link" href="{{ url_for('admin_requests', status=s) }}" {% if status == s %}aria-current="true"{% endif %}>{{ s }}</a>
+    {% endfor %}
+  </div>
+  <span class="meta">Critical requests rise to the top</span>
+</div>
+
+<section class="panel reveal" style="--i:1" aria-labelledby="request-table">
+  <div class="panel-body flush table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Ref</th><th>Group</th><th>Units</th><th>Hospital</th><th>Requester</th><th>Urgency</th><th>Status</th><th>Raised</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr data-request="{{ r['request_id'] }}" data-group="{{ r['blood_group'] }}">
+          <td class="num muted">REQ-{{ '%04d'|format(r['request_id']) }}</td>
+          <td><span class="chip">{{ r['blood_group'] }}</span></td>
+          <td class="num">{{ r['units'] }}</td>
+          <td>
+            <div class="strong">{{ r['hospital'] }}</div>
+            <div class="muted" style="font-size:12px">{{ r['city'] }}</div>
+          </td>
+          <td class="muted">{{ r['requester'] }}</td>
+          <td>{% if r['urgency'] == 'Critical' %}<span class="chip chip-critical">Critical</span>{% else %}<span class="chip">Routine</span>{% endif %}</td>
+          <td><span class="status status-{{ r['status'] }}" data-status-chip>{{ r['status'] }}</span></td>
+          <td class="num muted" style="font-size:12px">{{ r['created_at'][:10] }}</td>
+          <td>
+            <div class="row" style="gap:5px;flex-wrap:wrap">
+              {% if r['status'] == 'Pending' %}
+              <button class="btn btn-sm btn-stamp" type="button" data-status="Approved">Approve</button>
+              <button class="btn btn-sm btn-stamp btn-danger-stamp" type="button" data-status="Cancelled">Decline</button>
+              {% elif r['status'] == 'Approved' %}
+              <button class="btn btn-sm btn-stamp" type="button" data-status="Completed">Complete</button>
+              <button class="btn btn-sm btn-stamp btn-danger-stamp" type="button" data-status="Cancelled">Cancel</button>
+              {% else %}
+              <span class="faint" style="font-size:12px">Filed</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="muted">No requests in this view.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mt-3 reveal" id="new-request" style="--i:2" aria-labelledby="new-request-head">
+  <div class="section-head"><h2 id="new-request-head">Raise a request</h2><span class="meta">Desk entry</span></div>
+  <div class="panel">
+    <div class="panel-body">
+      <form method="post" action="{{ url_for('admin_new_request') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+          <div class="field">
+            <label for="hospital_id">Hospital</label>
+            <select id="hospital_id" name="hospital_id" required>
+              {% for h in hospitals %}<option value="{{ h['hospital_id'] }}">{{ h['name'] }} — {{ h['city'] }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="blood_group">Blood group</label>
+            <select id="blood_group" name="blood_group" required>
+              {% for g in blood_groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label for="units">Units</label>
+            <input id="units" name="units" type="number" min="1" max="20" value="1" required>
+          </div>
+          <div class="field">
+            <label for="urgency">Urgency</label>
+            <select id="urgency" name="urgency"><option>Routine</option><option>Critical</option></select>
+          </div>
+          <div class="field span-2">
+            <label for="note">Note</label>
+            <input id="note" name="note" type="text" maxlength="200" placeholder="Ward, procedure or contact">
+          </div>
+        </div>
+        <button class="btn btn-primary mt-2" type="submit">{{ icon('plus') }} Add to rail</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
