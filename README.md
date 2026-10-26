@@ -72,12 +72,17 @@ All accounts, hospitals, stock counts and requests are synthetic.
 
 ## Project Report
 
-The PBL implementation report is included in two formats:
+The PBCMT404 five-chapter format:
 
-- [Report PDF](report/Blood_Bank_Donor_Management_Report.pdf)
-- [Editable report DOCX](report/Blood_Bank_Donor_Management_Report.docx)
+- [PBCMT404 report PDF](report/Blood_Bank_PBCMT404_Report.pdf)
+- [Editable PBCMT404 report DOCX](report/Blood_Bank_PBCMT404_Report.docx)
 
-The DOCX contains cover-page placeholders for student and institution details. Replace them before submission.
+The extended design-led report is also available:
+
+- [Extended report PDF](report/Blood_Bank_Donor_Management_Report.pdf)
+- [Editable extended report DOCX](report/Blood_Bank_Donor_Management_Report.docx)
+
+Both DOCX files contain cover-page placeholders for student and institution details. Replace them before submission.
 
 ## Project Structure
 
